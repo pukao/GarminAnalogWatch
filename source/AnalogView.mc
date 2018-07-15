@@ -22,7 +22,6 @@ class AnalogView extends WatchUi.WatchFace
     var font;
     var isAwake;
     var screenShape;
-    var dndIcon;
     var offscreenBuffer;
     var dateBuffer;
     var curClip;
@@ -42,14 +41,6 @@ class AnalogView extends WatchUi.WatchFace
 
         // Load the custom font we use for drawing the 3, 6, 9, and 12 on the watchface.
         font = WatchUi.loadResource(Rez.Fonts.id_font_black_diamond);
-
-        // If this device supports the Do Not Disturb feature,
-        // load the associated Icon into memory.
-        if (System.getDeviceSettings() has :doNotDisturb) {
-            dndIcon = WatchUi.loadResource(Rez.Drawables.DoNotDisturbIcon);
-        } else {
-            dndIcon = null;
-        }
 
         // If this device supports BufferedBitmap, allocate the buffers we use for drawing
         if(Toybox.Graphics has :BufferedBitmap) {
@@ -172,11 +163,6 @@ class AnalogView extends WatchUi.WatchFace
 
         // Draw the tick marks around the edges of the screen
         drawHashMarks(targetDc);
-
-        // Draw the do-not-disturb icon if we support it and the setting is enabled
-        if (null != dndIcon && System.getDeviceSettings().doNotDisturb) {
-            targetDc.drawBitmap( width * 0.75, height / 2 - 15, dndIcon);
-        }
 
         //Use white to draw the hour and minute hands
         targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
