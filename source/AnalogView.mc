@@ -79,7 +79,7 @@ class AnalogView extends WatchUi.WatchFace
     // used to draw a watch hand. The coordinates are generated with specified length,
     // tail length, and width and rotated around the center point at the provided angle.
     // 0 degrees is at the 12 o'clock position, and increases in the clockwise direction.
-    function generateHandCoordinates(centerPoint, angle, handLength, tailLength, width) {
+    function drawHandCoordinates(dc, centerPoint, angle, handLength, tailLength, width) {
         // Map out the coordinates of the watch hand
         var coords = [[-(width / 2), tailLength], [-(width / 2), -handLength], [width / 2, -handLength], [width / 2, tailLength]];
         var result = new [4];
@@ -93,8 +93,11 @@ class AnalogView extends WatchUi.WatchFace
 
             result[i] = [centerPoint[0] + x, centerPoint[1] + y];
         }
+        dc.fillPolygon(result);
 
-        return result;
+        var mid_x = (result[1][0] + result[2][0]) / 2;
+        var mid_y = (result[1][1] + result[2][1]) / 2;
+        dc.fillCircle(mid_x, mid_y, width / 2);
     }
 
     // Draws the clock tick marks around the outside edges of the screen.
@@ -171,12 +174,11 @@ class AnalogView extends WatchUi.WatchFace
         hourHandAngle = (((clockTime.hour % 12) * 60) + clockTime.min);
         hourHandAngle = hourHandAngle / (12 * 60.0);
         hourHandAngle = hourHandAngle * Math.PI * 2;
-
-        targetDc.fillPolygon(generateHandCoordinates(screenCenterPoint, hourHandAngle, 40, 0, 3));
+		drawHandCoordinates(targetDc, screenCenterPoint, hourHandAngle, 60, 0, 5);
 
         // Draw the minute hand.
         minuteHandAngle = (clockTime.min / 60.0) * Math.PI * 2;
-        targetDc.fillPolygon(generateHandCoordinates(screenCenterPoint, minuteHandAngle, 70, 0, 2));
+        drawHandCoordinates(targetDc, screenCenterPoint, minuteHandAngle, 100, 0, 5);
 
         // Draw the arbor in the center of the screen.
         targetDc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
