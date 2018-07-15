@@ -111,40 +111,29 @@ class AnalogView extends WatchUi.WatchFace
         var width = dc.getWidth();
         var height = dc.getHeight();
 
-        // Draw hashmarks differently depending on screen geometry.
-        if (System.SCREEN_SHAPE_ROUND == screenShape) {
-            var sX, sY;
-            var eX, eY;
-            var outerRad = width / 2;
-            var innerRad = outerRad - 10;
-            // Loop through each 15 minute block and draw tick marks.
-            var marks = 60;
-            var big = 5;
-            for (var i = Math.PI / 6; i <= 11 * Math.PI / 6; i += (Math.PI / 3)) {
-                // Partially unrolled loop to draw two tickmarks in 15 minute block.
-                sY = outerRad + innerRad * Math.sin(i);
-                eY = outerRad + outerRad * Math.sin(i);
-                sX = outerRad + innerRad * Math.cos(i);
-                eX = outerRad + outerRad * Math.cos(i);
-                dc.drawLine(sX, sY, eX, eY);
-                i += Math.PI / 6;
-                sY = outerRad + innerRad * Math.sin(i);
-                eY = outerRad + outerRad * Math.sin(i);
-                sX = outerRad + innerRad * Math.cos(i);
-                eX = outerRad + outerRad * Math.cos(i);
-                dc.drawLine(sX, sY, eX, eY);
-            }
-        } else {
-            var coords = [0, width / 4, (3 * width) / 4, width];
-            for (var i = 0; i < coords.size(); i += 1) {
-                var dx = ((width / 2.0) - coords[i]) / (height / 2.0);
-                var upperX = coords[i] + (dx * 10);
-                // Draw the upper hash marks.
-                dc.fillPolygon([[coords[i] - 1, 2], [upperX - 1, 12], [upperX + 1, 12], [coords[i] + 1, 2]]);
-                // Draw the lower hash marks.
-                dc.fillPolygon([[coords[i] - 1, height-2], [upperX - 1, height - 12], [upperX + 1, height - 12], [coords[i] + 1, height - 2]]);
-            }
+        var sX, sY;
+        var eX, eY;
+        var outerRad = width / 2;
+        var innerRad = outerRad - 8;
+
+
+        for (var i = 0; i < 60 * Math.PI / 30; i += (Math.PI / 30)) {
+            sY = outerRad + innerRad * Math.sin(i);
+            eY = outerRad + outerRad * Math.sin(i);
+            sX = outerRad + innerRad * Math.cos(i);
+            eX = outerRad + outerRad * Math.cos(i);
+            dc.drawLine(sX, sY, eX, eY);
         }
+
+        innerRad -= 4;
+        dc.setPenWidth(2);
+        for (var i = 0; i < 12 * Math.PI / 6; i += (Math.PI / 6)) {
+            sY = outerRad + innerRad * Math.sin(i);
+            eY = outerRad + outerRad * Math.sin(i);
+            sX = outerRad + innerRad * Math.cos(i);
+            eX = outerRad + outerRad * Math.cos(i);
+            dc.drawLine(sX, sY, eX, eY);
+		}
     }
 
     // Handle the update event
