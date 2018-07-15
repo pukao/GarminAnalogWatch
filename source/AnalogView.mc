@@ -167,9 +167,9 @@ class AnalogView extends WatchUi.WatchFace
         targetDc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_WHITE);
         targetDc.fillRectangle(0, 0, dc.getWidth(), dc.getHeight());
 
-        // Draw a grey triangle over the upper right half of the screen.
+//        // Draw a grey triangle over the upper right half of the screen.
         targetDc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_DK_GRAY);
-        targetDc.fillPolygon([[0, 0], [targetDc.getWidth(), 0], [targetDc.getWidth(), targetDc.getHeight()], [0, 0]]);
+//        targetDc.fillPolygon([[0, 0], [targetDc.getWidth(), 0], [targetDc.getWidth(), targetDc.getHeight()], [0, 0]]);
 
         // Draw the tick marks around the edges of the screen
         drawHashMarks(targetDc);
@@ -199,12 +199,12 @@ class AnalogView extends WatchUi.WatchFace
         targetDc.setColor(Graphics.COLOR_BLACK,Graphics.COLOR_BLACK);
         targetDc.drawCircle(width / 2, height / 2, 7);
 
-        // Draw the 3, 6, 9, and 12 hour labels.
-        targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        targetDc.drawText((width / 2), 2, font, "12", Graphics.TEXT_JUSTIFY_CENTER);
-        targetDc.drawText(width - 2, (height / 2) - 15, font, "3", Graphics.TEXT_JUSTIFY_RIGHT);
-        targetDc.drawText(width / 2, height - 30, font, "6", Graphics.TEXT_JUSTIFY_CENTER);
-        targetDc.drawText(2, (height / 2) - 15, font, "9", Graphics.TEXT_JUSTIFY_LEFT);
+//        // Draw the 3, 6, 9, and 12 hour labels.
+//        targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+//        targetDc.drawText((width / 2), 2, font, "12", Graphics.TEXT_JUSTIFY_CENTER);
+//        targetDc.drawText(width - 2, (height / 2) - 15, font, "3", Graphics.TEXT_JUSTIFY_RIGHT);
+//        targetDc.drawText(width / 2, height - 30, font, "6", Graphics.TEXT_JUSTIFY_CENTER);
+//        targetDc.drawText(2, (height / 2) - 15, font, "9", Graphics.TEXT_JUSTIFY_LEFT);
 
         // If we have an offscreen buffer that we are using for the date string,
         // Draw the date into it. If we do not, the date will get drawn every update
