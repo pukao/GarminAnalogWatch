@@ -144,7 +144,6 @@ class AnalogView extends WatchUi.WatchFace
         var clockTime = System.getClockTime();
         var minuteHandAngle;
         var hourHandAngle;
-        var secondHand;
         var targetDc = null;
 
         // We always want to refresh the full screen when we get a regular onUpdate call.
@@ -233,19 +232,6 @@ class AnalogView extends WatchUi.WatchFace
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, 3*height/4, Graphics.FONT_TINY, dataString, Graphics.TEXT_JUSTIFY_CENTER);
 
-        if( partialUpdatesAllowed ) {
-            // If this device supports partial updates and they are currently
-            // allowed run the onPartialUpdate method to draw the second hand.
-            onPartialUpdate( dc );
-        } else if ( isAwake ) {
-            // Otherwise, if we are out of sleep mode, draw the second hand
-            // directly in the full update method.
-            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-            secondHand = (clockTime.sec / 60.0) * Math.PI * 2;
-
-            dc.fillPolygon(generateHandCoordinates(screenCenterPoint, secondHand, 60, 20, 2));
-        }
-
         fullScreenRefresh = false;
     }
 
@@ -260,26 +246,7 @@ class AnalogView extends WatchUi.WatchFace
 
     // Handle the partial update event
     function onPartialUpdate( dc ) {
-        // If we're not doing a full screen refresh we need to re-draw the background
-        // before drawing the updated second hand position. Note this will only re-draw
-        // the background in the area specified by the previously computed clipping region.
-        if(!fullScreenRefresh) {
-            drawBackground(dc);
-        }
 
-        var clockTime = System.getClockTime();
-        var secondHand = (clockTime.sec / 60.0) * Math.PI * 2;
-        var secondHandPoints = generateHandCoordinates(screenCenterPoint, secondHand, 60, 20, 2);
-
-        // Update the cliping rectangle to the new location of the second hand.
-        curClip = getBoundingBox( secondHandPoints );
-        var bboxWidth = curClip[1][0] - curClip[0][0] + 1;
-        var bboxHeight = curClip[1][1] - curClip[0][1] + 1;
-        dc.setClip(curClip[0][0], curClip[0][1], bboxWidth, bboxHeight);
-
-        // Draw the second hand to the screen.
-        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-        dc.fillPolygon(secondHandPoints);
     }
 
     // Compute a bounding box from the passed in points
