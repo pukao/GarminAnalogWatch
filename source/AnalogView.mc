@@ -40,23 +40,19 @@ class AnalogView extends WatchUi.WatchFace
     // 0 degrees is at the 12 o'clock position, and increases in the clockwise direction.
     function drawHandCoordinates(dc, centerPoint, angle, handLength, tailLength, width) {
         // Map out the coordinates of the watch hand
-        var coords = [[-(width / 2), tailLength], [-(width / 2), -handLength], [width / 2, -handLength], [width / 2, tailLength]];
-        var result = new [4];
+		// rotate the angle 90 degrees ( PI/2 rad) backwards
+        angle -= Math.PI / 2;
         var cos = Math.cos(angle);
         var sin = Math.sin(angle);
 
-        // Transform the coordinates
-        for (var i = 0; i < 4; i += 1) {
-            var x = (coords[i][0] * cos) - (coords[i][1] * sin) + 0.5;
-            var y = (coords[i][0] * sin) + (coords[i][1] * cos) + 0.5;
 
-            result[i] = [centerPoint[0] + x, centerPoint[1] + y];
-        }
-        dc.fillPolygon(result);
+        var x = (handLength * cos) + centerPoint[0];
+        var y = (handLength * sin) + centerPoint[1];
 
-        var mid_x = (result[1][0] + result[2][0]) / 2;
-        var mid_y = (result[1][1] + result[2][1]) / 2;
-        dc.fillCircle(mid_x, mid_y, width / 2);
+        dc.setPenWidth(width);
+        dc.drawLine(centerPoint[0], centerPoint[1], x, y);
+
+        dc.fillCircle(x, y, width / 2);
     }
 
     // Draws the clock tick marks around the outside edges of the screen.
@@ -69,7 +65,7 @@ class AnalogView extends WatchUi.WatchFace
         var outerRad = width / 2;
         var innerRad = outerRad - 8;
 
-
+        dc.setPenWidth(1);
         for (var i = 0; i < 60 * Math.PI / 30; i += (Math.PI / 30)) {
             sY = outerRad + innerRad * Math.sin(i);
             eY = outerRad + outerRad * Math.sin(i);
@@ -144,11 +140,11 @@ class AnalogView extends WatchUi.WatchFace
         hourHandAngle = (((clockTime.hour % 12) * 60) + clockTime.min);
         hourHandAngle = hourHandAngle / (12 * 60.0);
         hourHandAngle = hourHandAngle * Math.PI * 2;
-		drawHandCoordinates(targetDc, screenCenterPoint, hourHandAngle, 60, 0, 5);
+        drawHandCoordinates(targetDc, screenCenterPoint, hourHandAngle, 60, 0, 4);
 
         // Draw the minute hand.
         minuteHandAngle = (clockTime.min / 60.0) * Math.PI * 2;
-        drawHandCoordinates(targetDc, screenCenterPoint, minuteHandAngle, 100, 0, 5);
+        drawHandCoordinates(targetDc, screenCenterPoint, minuteHandAngle, 100, 0, 4);
 
         // Draw the arbor in the center of the screen.
         targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
