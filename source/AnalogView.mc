@@ -19,59 +19,16 @@ var partialUpdatesAllowed = false;
 // Original design by Austen Harbour
 class AnalogView extends WatchUi.WatchFace
 {
-    var font;
     var isAwake;
-    var screenShape;
-    var offscreenBuffer;
-    var dateBuffer;
-    var curClip;
     var screenCenterPoint;
-    var fullScreenRefresh;
 
     // Initialize variables for this view
     function initialize() {
         WatchFace.initialize();
-        screenShape = System.getDeviceSettings().screenShape;
-        fullScreenRefresh = true;
-        partialUpdatesAllowed = ( Toybox.WatchUi.WatchFace has :onPartialUpdate );
     }
 
     // Configure the layout of the watchface for this device
     function onLayout(dc) {
-
-        // Load the custom font we use for drawing the 3, 6, 9, and 12 on the watchface.
-        font = WatchUi.loadResource(Rez.Fonts.id_font_black_diamond);
-
-        // If this device supports BufferedBitmap, allocate the buffers we use for drawing
-        if(Toybox.Graphics has :BufferedBitmap) {
-            // Allocate a full screen size buffer with a palette of only 4 colors to draw
-            // the background image of the watchface.  This is used to facilitate blanking
-            // the second hand during partial updates of the display
-            offscreenBuffer = new Graphics.BufferedBitmap({
-                :width=>dc.getWidth(),
-                :height=>dc.getHeight(),
-                :palette=> [
-                    Graphics.COLOR_DK_GRAY,
-                    Graphics.COLOR_LT_GRAY,
-                    Graphics.COLOR_BLACK,
-                    Graphics.COLOR_WHITE
-                ]
-            });
-
-            // Allocate a buffer tall enough to draw the date into the full width of the
-            // screen. This buffer is also used for blanking the second hand. This full
-            // color buffer is needed because anti-aliased fonts cannot be drawn into
-            // a buffer with a reduced color palette
-            dateBuffer = new Graphics.BufferedBitmap({
-                :width=>dc.getWidth(),
-                :height=>Graphics.getFontHeight(Graphics.FONT_MEDIUM)
-            });
-        } else {
-            offscreenBuffer = null;
-        }
-
-        curClip = null;
-
         screenCenterPoint = [dc.getWidth()/2, dc.getHeight()/2];
     }
 
@@ -138,37 +95,24 @@ class AnalogView extends WatchUi.WatchFace
         var clockTime = System.getClockTime();
         var minuteHandAngle;
         var hourHandAngle;
-        var targetDc = null;
+        var targetDc = dc;
 
-        // We always want to refresh the full screen when we get a regular onUpdate call.
-        fullScreenRefresh = true;
-
-        if(null != offscreenBuffer) {
-            dc.clearClip();
-            curClip = null;
-            // If we have an offscreen buffer that we are using to draw the background,
-            // set the draw context of that buffer as our target.
-            targetDc = offscreenBuffer.getDc();
-        } else {
-            targetDc = dc;
-        }
 
         width = targetDc.getWidth();
         height = targetDc.getHeight();
 
         // Fill the entire background with Black.
         targetDc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_WHITE);
-        targetDc.fillRectangle(0, 0, dc.getWidth(), dc.getHeight());
+        targetDc.fillRectangle(0, 0, targetDc.getWidth(), targetDc.getHeight());
 
-//        // Draw a grey triangle over the upper right half of the screen.
-        targetDc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_DK_GRAY);
-//        targetDc.fillPolygon([[0, 0], [targetDc.getWidth(), 0], [targetDc.getWidth(), targetDc.getHeight()], [0, 0]]);
 
         // Draw the tick marks around the edges of the screen
+        targetDc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_DK_GRAY);
         drawHashMarks(targetDc);
 
         //Use white to draw the hour and minute hands
         targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+
 
         // Draw the hour hand. Convert it to minutes and compute the angle.
         hourHandAngle = (((clockTime.hour % 12) * 60) + clockTime.min);
@@ -181,61 +125,21 @@ class AnalogView extends WatchUi.WatchFace
         drawHandCoordinates(targetDc, screenCenterPoint, minuteHandAngle, 100, 0, 5);
 
         // Draw the arbor in the center of the screen.
-        targetDc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
+        targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         targetDc.fillCircle(width / 2, height / 2, 7);
         targetDc.setColor(Graphics.COLOR_BLACK,Graphics.COLOR_BLACK);
         targetDc.drawCircle(width / 2, height / 2, 7);
-
-//        // Draw the 3, 6, 9, and 12 hour labels.
-//        targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-//        targetDc.drawText((width / 2), 2, font, "12", Graphics.TEXT_JUSTIFY_CENTER);
-//        targetDc.drawText(width - 2, (height / 2) - 15, font, "3", Graphics.TEXT_JUSTIFY_RIGHT);
-//        targetDc.drawText(width / 2, height - 30, font, "6", Graphics.TEXT_JUSTIFY_CENTER);
-//        targetDc.drawText(2, (height / 2) - 15, font, "9", Graphics.TEXT_JUSTIFY_LEFT);
-
-        // If we have an offscreen buffer that we are using for the date string,
-        // Draw the date into it. If we do not, the date will get drawn every update
-        // after blanking the second hand.
-        if( null != dateBuffer ) {
-            var dateDc = dateBuffer.getDc();
-
-            //Draw the background image buffer into the date buffer to set the background
-            dateDc.drawBitmap(0, -(height / 4), offscreenBuffer);
-
-            //Draw the date string into the buffer.
-            drawDateString( dateDc, width / 2, 0 );
-        }
-
-        // Output the offscreen buffers to the main display if required.
-        drawBackground(dc);
-
-        // Draw the battery percentage directly to the main screen.
-        var dataString = (System.getSystemStats().battery + 0.5).toNumber().toString() + "%";
-
-        // Also draw the background process data if it is available.
-        var backgroundData = Application.getApp().temperature;
-        if(backgroundData != null) {
-            dataString += " - " + backgroundData;
-        }
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 3*height/4, Graphics.FONT_TINY, dataString, Graphics.TEXT_JUSTIFY_CENTER);
-
-        fullScreenRefresh = false;
     }
 
     // Draw the date string into the provided buffer at the specified location
-    function drawDateString( dc, x, y ) {
-        var info = Gregorian.info(Time.now(), Time.FORMAT_LONG);
-        var dateStr = Lang.format("$1$ $2$ $3$", [info.day_of_week, info.month, info.day]);
+//    function drawDateString( dc, x, y ) {
+//        var info = Gregorian.info(Time.now(), Time.FORMAT_LONG);
+//        var dateStr = Lang.format("$1$ $2$ $3$", [info.day_of_week, info.month, info.day]);
+//
+//        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+//        dc.drawText(x, y, Graphics.FONT_MEDIUM, dateStr, Graphics.TEXT_JUSTIFY_CENTER);
+//    }
 
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(x, y, Graphics.FONT_MEDIUM, dateStr, Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
-    // Handle the partial update event
-    function onPartialUpdate( dc ) {
-
-    }
 
     // Compute a bounding box from the passed in points
     function getBoundingBox( points ) {
@@ -263,30 +167,6 @@ class AnalogView extends WatchUi.WatchFace
         return [min, max];
     }
 
-    // Draw the watch face background
-    // onUpdate uses this method to transfer newly rendered Buffered Bitmaps
-    // to the main display.
-    // onPartialUpdate uses this to blank the second hand from the previous
-    // second before outputing the new one.
-    function drawBackground(dc) {
-        var width = dc.getWidth();
-        var height = dc.getHeight();
-
-        //If we have an offscreen buffer that has been written to
-        //draw it to the screen.
-        if( null != offscreenBuffer ) {
-            dc.drawBitmap(0, 0, offscreenBuffer);
-        }
-
-        // Draw the date
-        if( null != dateBuffer ) {
-            // If the date is saved in a Buffered Bitmap, just copy it from there.
-            dc.drawBitmap(0, (height / 4), dateBuffer );
-        } else {
-            // Otherwise, draw it from scratch.
-            drawDateString( dc, width / 2, height / 4 );
-        }
-    }
 
     // This method is called when the device re-enters sleep mode.
     // Set the isAwake flag to let onUpdate know it should stop rendering the second hand.
