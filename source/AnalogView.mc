@@ -12,6 +12,8 @@ using Toybox.Time;
 using Toybox.Time.Gregorian;
 using Toybox.WatchUi;
 using Toybox.Application;
+using Toybox.ActivityMonitor;
+
 
 var partialUpdatesAllowed = false;
 
@@ -110,9 +112,33 @@ class AnalogView extends WatchUi.WatchFace
         targetDc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_DK_GRAY);
         drawHashMarks(targetDc);
 
-        //Use white to draw the hour and minute hands
         targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
+        var battery = System.getSystemStats().battery;
+        if (battery <= 30) {
+            if (battery <= 10) {
+                targetDc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+            }
+            targetDc.drawText(width * 0.60 ,(height * 0.15), Graphics.FONT_MEDIUM, "B", Graphics.TEXT_JUSTIFY_CENTER);
+        }
+
+        targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+
+        var notifications = System.getDeviceSettings().notificationCount;
+        if (notifications > 0) {
+            targetDc.drawText(width * 0.40 ,(height * 0.15), Graphics.FONT_MEDIUM, "N", Graphics.TEXT_JUSTIFY_CENTER);
+        }
+
+        var info = ActivityMonitor.getInfo();
+        targetDc.drawText(width * 0.25,(height * 0.42), Graphics.FONT_MEDIUM, info.steps, Graphics.TEXT_JUSTIFY_CENTER);
+
+        targetDc.drawText(width * 0.75,(height * 0.42), Graphics.FONT_MEDIUM, info.activeMinutesDay.total, Graphics.TEXT_JUSTIFY_CENTER);
+
+        var distance = (info.distance / 100000.0).format("%.2f");
+        targetDc.drawText(width / 2,(height * 0.7), Graphics.FONT_TINY, distance, Graphics.TEXT_JUSTIFY_CENTER);
+
+        //Use white to draw the hour and minute hands
+        targetDc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
         // Draw the hour hand. Convert it to minutes and compute the angle.
         hourHandAngle = (((clockTime.hour % 12) * 60) + clockTime.min);
